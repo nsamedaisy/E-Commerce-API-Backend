@@ -3,7 +3,6 @@
 const express = require("express");
 const createError = require("http-errors");
 const productRoutes = require("./routes/product");
-// const helloRoutes = require("./routes/hello");
 // const cors = require("cors");
 // const bodyParser = require("body-parser");
 
