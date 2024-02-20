@@ -3,8 +3,8 @@
 const express = require("express");
 const createError = require("http-errors");
 const productRoutes = require("./routes/product");
-// const cors = require("cors");
-// const bodyParser = require("body-parser");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
 // const port = process.env.PORT || 3001;
@@ -14,6 +14,7 @@ app.use("/api/products", productRoutes);
 
 app.use((req, res, next) => {
   if (req.method !== "GET") {
+    2;
     next(createError(405));
     return;
   }
@@ -26,8 +27,8 @@ app.use((err, req, res, next) => {
 });
 
 // Middleware
-// app.use(cors());
-// app.use(bodyParser.json());
+app.use(cors());
+app.use(bodyParser.json());
 app.use(express.json());
 
 // app.get("/api", (req, res) => {
