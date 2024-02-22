@@ -1,72 +1,97 @@
-const express = require("express");
-const router = express.Router();
+const { Product } = require("../models/Product");
+const { auth, isUser, isAdmin } = require("../middleware/auth");
+const cloudinary = require("../utils/cloudinary");
 
-// Mock data
-const products = [
-  { id: 1, name: "Product 1", category: "Category 1", price: 10 },
-  { id: 2, name: "Product 2", category: "Category 2", price: 20 },
-  { id: 3, name: "Product 3", category: "Category 1", price: 30 },
-];
+const router = require("express").Router();
 
-// Get all products
-router.get("/", (req, res) => {
-  res.json(products);
-});
+//CREATE
 
-// Get a single product by ID
-router.get("/:id", (req, res) => {
-  const productId = parseInt(req.params.id);
-  const product = products.find((p) => p.id === productId);
+router.post("/", isAdmin, async (req, res) => {
+  const { name, brand, desc, price, image } = req.body;
 
-  if (!product) {
-    return res.status(404).json({ error: "Product not found" });
+  try {
+    if (image) {
+      const uploadedResponse = await cloudinary.uploader.upload(image, {
+        upload_preset: "online-shop",
+      });
+
+      if (uploadedResponse) {
+        const product = new Product({
+          name,
+          brand,
+          desc,
+          price,
+          image: uploadedResponse,
+        });
+
+        const savedProduct = await product.save();
+        res.status(200).send(savedProduct);
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
   }
-
-  res.json(product);
 });
 
-// Create a new product
-router.post("/", (req, res) => {
-  const { name, category, price } = req.body;
-  const newProduct = {
-    id: products.length + 1,
-    name,
-    category,
-    price,
-  };
+//DELETE
 
-  products.push(newProduct);
-  res.status(201).json({ message: "Product created successfully" });
-});
-
-// Update a product
-router.put("/:id", (req, res) => {
-  const productId = parseInt(req.params.id);
-  const { name, category, price } = req.body;
-  const product = products.find((p) => p.id === productId);
-
-  if (!product) {
-    return res.status(404).json({ error: "Product not found" });
+router.delete("/:id", isAdmin, async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.status(200).send("Product has been deleted...");
+  } catch (error) {
+    res.status(500).send(error);
   }
-
-  product.name = name || product.name;
-  product.category = category || product.category;
-  product.price = price || product.price;
-
-  res.json({ message: "Product updated successfully" });
 });
 
-// Delete a product
-router.delete("/:id", (req, res) => {
-  const productId = parseInt(req.params.id);
-  const productIndex = products.findIndex((p) => p.id === productId);
+//GET ALL PRODUCTS
 
-  if (productIndex === -1) {
-    return res.status(404).json({ error: "Product not found" });
+router.get("/", async (req, res) => {
+  const qbrand = req.query.brand;
+  try {
+    let products;
+
+    if (qbrand) {
+      products = await Product.find({
+        brand: qbrand,
+      });
+    } else {
+      products = await Product.find();
+    }
+
+    res.status(200).send(products);
+  } catch (error) {
+    res.status(500).send(error);
   }
+});
 
-  products.splice(productIndex, 1);
-  res.json({ message: "Product deleted successfully" });
+//GET PRODUCT
+
+router.get("/find/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    res.status(200).send(product);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+//UPDATE
+
+router.put("/:id", isAdmin, async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+    res.status(200).send(updatedProduct);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 module.exports = router;
