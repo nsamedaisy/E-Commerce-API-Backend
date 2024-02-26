@@ -1,12 +1,12 @@
-const { Product } = require("../models/Product");
-const { auth, isUser, isAdmin } = require("../middleware/auth");
-const cloudinary = require("../utils/cloudinary");
+const { Product } = require("../models/products");
+// const { isUser } = require("../middleware/auth");
+// const cloudinary = require("../utils/cloudinary");
 
 const router = require("express").Router();
 
 //CREATE
 
-router.post("/", isAdmin, async (req, res) => {
+router.post("/", async (req, res) => {
   const { name, brand, desc, price, image } = req.body;
 
   try {
@@ -36,7 +36,7 @@ router.post("/", isAdmin, async (req, res) => {
 
 //DELETE
 
-router.delete("/:id", isAdmin, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.status(200).send("Product has been deleted...");
@@ -79,7 +79,7 @@ router.get("/find/:id", async (req, res) => {
 
 //UPDATE
 
-router.put("/:id", isAdmin, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
