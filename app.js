@@ -6,18 +6,32 @@ const productRoutes = require("./routes/product");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
+require("dotenv").config();
+
 const app = express();
-// const port = process.env.PORT || 3001;
 
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// MongoDB Atlas connection
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB Atlas");
+  })
+  .catch((error) => {
+    console.error("Error connecting to MongoDB Atlas:", error);
+  });
+
+//Routes
 app.use("/api/products", productRoutes);
-// app.use("/hello", helloRoutes);
 
+// Error handling middleware
 app.use((req, res, next) => {
-  if (req.method !== "GET") {
-    2;
-    next(createError(405));
-    return;
-  }
   next(createError(404));
 });
 
@@ -25,19 +39,5 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.send(err.message);
 });
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.json());
-
-// app.get("/api", (req, res) => {
-//   res.json({ message: "Am too busy to be bae!" });
-// });
-
-// Start the server
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}.`);
-// });
 
 module.exports = app;
